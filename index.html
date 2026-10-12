@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Budget Planner</title>
+  <meta name="description" content="A clean, responsive personal budget planner and expense tracker built with vanilla HTML, CSS, and JavaScript.">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Immediate authentication check: redirect unauthenticated access to login page
+    (function () {
+      if (sessionStorage.getItem('budgetPlanner_auth') !== 'true') {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header: Title, Month Selector, Currency, & Global Actions -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+            <path d="M2 10h20"></path>
+            <circle cx="7" cy="15" r="1.5"></circle>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Personal Budget Planner</h1>
+          <p class="brand-subtitle">Smart financial management for every month</p>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Month Picker -->
+        <div class="control-group">
+          <label for="month-picker" class="control-label">Month</label>
+          <input type="month" id="month-picker" class="form-input month-input" aria-label="Select budget month">
+        </div>
+
+        <!-- Currency Selector -->
+        <div class="control-group">
+          <label for="currency-select" class="control-label">Currency</label>
+          <div class="currency-select-wrapper">
+            <select id="currency-select" class="form-select currency-select" aria-label="Select currency">
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+            <span class="currency-select-arrow" aria-hidden="true"></span>
+          </div>
+        </div>
+
+        <!-- Global Action Buttons -->
+        <div class="header-actions">
+          <button type="button" id="btn-clear-month" class="btn btn-outline-warning btn-sm" title="Clear all transactions and budget for this month">Clear this month</button>
+          <button type="button" id="btn-reset-all" class="btn btn-outline-danger btn-sm" title="Reset all data across all months">Reset all data</button>
+          <button type="button" id="btn-logout" class="btn btn-outline-secondary btn-sm" title="Log out of demo account">Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 5 Summary Cards Grid -->
+    <section class="summary-grid" aria-label="Monthly Financial Summary">
+      <!-- Card 1: Monthly Budget -->
+      <div class="summary-card" id="card-wrapper-budget">
+        <div class="card-header">
+          <span class="card-title">Monthly Budget</span>
+          <span class="card-badge" id="budget-status-badge">Target</span>
+        </div>
+        <div class="card-value" id="card-budget">₹0.00</div>
+        <!-- Inline Form to Set Budget -->
+        <form id="budget-form" class="budget-form" novalidate>
+          <div class="budget-input-group">
+            <input type="number" id="budget-input" class="form-input form-input-sm" min="0" step="0.01" placeholder="Set budget" aria-label="Enter budget amount for this month">
+            <button type="submit" id="btn-set-budget" class="btn btn-primary btn-sm">Set</button>
+          </div>
+          <span class="field-error" id="err-budget" aria-live="polite"></span>
+        </form>
+      </div>
+
+      <!-- Card 2: Total Income -->
+      <div class="summary-card" id="card-wrapper-income">
+        <div class="card-header">
+          <span class="card-title">Total Income</span>
+          <span class="card-icon text-income" aria-hidden="true">↑</span>
+        </div>
+        <div class="card-value text-income" id="card-income">₹0.00</div>
+        <div class="card-footer">
+          <span class="card-subtext" id="income-count-text">0 transactions</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Total Expenses -->
+      <div class="summary-card" id="card-wrapper-expenses">
+        <div class="card-header">
+          <span class="card-title">Total Expenses</span>
+          <span class="card-icon text-expense" aria-hidden="true">↓</span>
+        </div>
+        <div class="card-value text-expense" id="card-expenses">₹0.00</div>
+        <div class="card-footer">
+          <span class="card-subtext" id="expense-count-text">0 transactions</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Budget Remaining -->
+      <div class="summary-card" id="card-wrapper-remaining">
+        <div class="card-header">
+          <span class="card-title">Budget Remaining</span>
+          <span class="card-sublabel">Budget − Expenses</span>
+        </div>
+        <div class="card-value" id="card-remaining">₹0.00</div>
+        <div class="card-footer">
+          <span class="card-subtext" id="remaining-status-text">Within budget</span>
+        </div>
+      </div>
+
+      <!-- Card 5: Balance -->
+      <div class="summary-card" id="card-wrapper-balance">
+        <div class="card-header">
+          <span class="card-title">Balance</span>
+          <span class="card-sublabel">Income − Expenses</span>
+        </div>
+        <div class="card-value" id="card-balance">₹0.00</div>
+        <div class="card-footer">
+          <span class="card-subtext" id="balance-status-text">Net monthly cash flow</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Budget Progress Bar & Warning Section -->
+    <section class="progress-section" aria-label="Budget Progress">
+      <div class="progress-header">
+        <div class="progress-title-wrap">
+          <h2 class="section-title">Budget Usage</h2>
+          <span class="progress-badge" id="progress-badge">No budget set</span>
+        </div>
+        <div class="progress-stats">
+          <span id="progress-spent-text">₹0.00 spent</span>
+          <span class="progress-divider">•</span>
+          <span id="progress-percentage-text">No budget set</span>
+        </div>
+      </div>
+
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+      </div>
+
+      <!-- Warning & Over-budget Alert Message Box -->
+      <div id="budget-alert" class="budget-alert hidden" role="alert" aria-live="polite">
+        <span class="alert-icon" id="alert-icon" aria-hidden="true">⚠️</span>
+        <div class="alert-content">
+          <p class="alert-message" id="alert-message"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Workspace (Desktop: 2 Columns, Mobile: 1 Column) -->
+    <main class="main-layout">
+      <!-- Left Column: Add/Edit Transaction Form & Category Breakdown -->
+      <div class="layout-column left-column">
+        <!-- Add/Edit Transaction Card -->
+        <section class="card form-card" aria-labelledby="form-heading">
+          <div class="card-header-bar">
+            <h2 id="form-heading" class="card-heading">Add Transaction</h2>
+            <span class="edit-mode-indicator hidden" id="edit-indicator">Editing</span>
+          </div>
+
+          <form id="transaction-form" novalidate>
+            <!-- Transaction Type Segmented Control -->
+            <div class="form-group">
+              <label class="input-label" id="type-label">Transaction Type</label>
+              <div class="segmented-control" role="radiogroup" aria-labelledby="type-label">
+                <input type="radio" id="type-expense" name="tx-type" value="expense" checked class="sr-only">
+                <label for="type-expense" class="segment-btn segment-btn-expense" id="segment-label-expense">
+                  <span class="segment-icon" aria-hidden="true">−</span> Expense
+                </label>
+
+                <input type="radio" id="type-income" name="tx-type" value="income" class="sr-only">
+                <label for="type-income" class="segment-btn segment-btn-income" id="segment-label-income">
+                  <span class="segment-icon" aria-hidden="true">+</span> Income
+                </label>
+              </div>
+            </div>
+
+            <!-- Description Input -->
+            <div class="form-group">
+              <div class="label-row">
+                <label for="tx-desc" class="input-label">Description <span class="required">*</span></label>
+                <span class="char-count" id="desc-char-count">0 / 60</span>
+              </div>
+              <input type="text" id="tx-desc" class="form-input" placeholder="e.g. Grocery shopping, Freelance project" maxlength="60" required aria-describedby="err-desc">
+              <span class="field-error" id="err-desc" aria-live="polite"></span>
+            </div>
+
+            <div class="form-row">
+              <!-- Amount Input -->
+              <div class="form-group col-half">
+                <label for="tx-amount" class="input-label">Amount <span class="required">*</span></label>
+                <div class="input-currency-wrapper">
+                  <span class="input-currency-symbol" id="form-currency-symbol">₹</span>
+                  <input type="number" id="tx-amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required aria-describedby="err-amount">
+                </div>
+                <span class="field-error" id="err-amount" aria-live="polite"></span>
+              </div>
+
+              <!-- Date Input -->
+              <div class="form-group col-half">
+                <label for="tx-date" class="input-label">Date <span class="required">*</span></label>
+                <input type="date" id="tx-date" class="form-input" required aria-describedby="err-date">
+                <span class="field-error" id="err-date" aria-live="polite"></span>
+              </div>
+            </div>
+
+            <!-- Category Select -->
+            <div class="form-group">
+              <label for="tx-category" class="input-label">Category <span class="required">*</span></label>
+              <select id="tx-category" class="form-select" required aria-describedby="err-category">
+                <!-- Dynamically populated based on transaction type -->
+              </select>
+              <span class="field-error" id="err-category" aria-live="polite"></span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+              <button type="submit" id="btn-submit-tx" class="btn btn-primary btn-block">Add Transaction</button>
+              <button type="button" id="btn-cancel-edit" class="btn btn-secondary btn-block hidden">Cancel Edit</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Spending by Category Breakdown Card -->
+        <section class="card breakdown-card" aria-labelledby="breakdown-heading">
+          <div class="card-header-bar">
+            <h2 id="breakdown-heading" class="card-heading">Spending by Category</h2>
+            <span class="badge-neutral" id="breakdown-month-text">Expenses</span>
+          </div>
+          <div id="category-breakdown-list" class="category-breakdown-list">
+            <!-- Dynamically populated bars sorted high to low -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: Transaction History & Filters -->
+      <div class="layout-column right-column">
+        <section class="card history-card" aria-labelledby="history-heading">
+          <div class="card-header-bar">
+            <div class="history-title-group">
+              <h2 id="history-heading" class="card-heading">Transactions</h2>
+              <span class="count-badge" id="tx-count-badge">0 items</span>
+            </div>
+          </div>
+
+          <!-- Filters Bar -->
+          <div class="filters-bar" aria-label="Transaction Filters">
+            <!-- Type Filter -->
+            <div class="filter-item">
+              <label for="filter-type" class="filter-label">Type</label>
+              <select id="filter-type" class="form-select filter-select" aria-label="Filter transactions by type">
+                <option value="all">All Types</option>
+                <option value="expense">Expenses Only</option>
+                <option value="income">Income Only</option>
+              </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div class="filter-item">
+              <label for="filter-category" class="filter-label">Category</label>
+              <select id="filter-category" class="form-select filter-select" aria-label="Filter transactions by category">
+                <option value="all">All Categories</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Transactions Table -->
+          <div class="table-responsive">
+            <table class="tx-table" id="tx-table" aria-label="List of transactions for the selected month">
+              <thead>
+                <tr>
+                  <th scope="col">Description</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Date</th>
+                  <th scope="col" class="text-right">Amount</th>
+                  <th scope="col" class="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tx-list-body">
+                <!-- Dynamically populated via event delegation -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State Container -->
+          <div id="tx-empty-state" class="empty-state hidden" aria-live="polite">
+            <div class="empty-icon" aria-hidden="true">📊</div>
+            <h3 class="empty-title">No transactions found</h3>
+            <p class="empty-message" id="empty-state-message">No transactions recorded for this month. Add an income or expense to get started.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Reusable Accessible Confirmation Modal -->
+  <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-msg">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="confirm-modal-title" class="modal-title">Confirm Action</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-modal" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-msg" class="modal-message">Are you sure you want to proceed?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btn-modal-confirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessible Toast Feedback Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Pure Vanilla JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>

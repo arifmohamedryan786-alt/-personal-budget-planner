@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Personal Budget Planner</title>
+  <meta name="description" content="Sign in to your Personal Budget Planner dashboard.">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Immediate authentication check: redirect to dashboard if session already active
+    (function () {
+      if (sessionStorage.getItem('budgetPlanner_auth') === 'true') {
+        window.location.replace('index.html');
+      }
+    })();
+  </script>
+</head>
+<body class="login-page-body">
+  <main class="login-container">
+    <div class="login-card">
+      <!-- Brand Header -->
+      <header class="login-header">
+        <div class="brand-icon login-brand-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+            <path d="M2 10h20"></path>
+            <circle cx="7" cy="15" r="1.5"></circle>
+          </svg>
+        </div>
+        <h1 class="login-title">Personal Budget Planner</h1>
+        <p class="login-subtitle">Sign in to access your financial dashboard</p>
+      </header>
+
+      <!-- Demo Credentials Helper Banner -->
+      <div class="demo-credentials-box">
+        <div class="demo-credentials-header">
+          <span class="demo-credentials-badge">Demo Account</span>
+          <button type="button" id="btn-autofill-demo" class="btn-autofill-demo" title="Fill credentials automatically">
+            Auto-fill
+          </button>
+        </div>
+        <div class="demo-credentials-grid">
+          <div class="demo-cred-row">
+            <span class="demo-cred-label">Username:</span>
+            <code class="demo-cred-code">admin</code>
+          </div>
+          <div class="demo-cred-row">
+            <span class="demo-cred-label">Password:</span>
+            <code class="demo-cred-code">Budget@123</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication Error Alert -->
+      <div id="login-alert" class="login-alert hidden" role="alert" aria-live="polite">
+        <span class="alert-icon" aria-hidden="true">⚠️</span>
+        <div class="alert-content">
+          <p class="login-alert-text" id="login-alert-text">Invalid username or password.</p>
+        </div>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="login-form" novalidate>
+        <!-- Username Field -->
+        <div class="form-group">
+          <label for="login-username" class="input-label">Username <span class="required">*</span></label>
+          <input
+            type="text"
+            id="login-username"
+            name="username"
+            class="form-input"
+            placeholder="Enter username"
+            required
+            autocomplete="username"
+            autofocus
+            aria-describedby="err-username"
+          >
+          <span class="field-error" id="err-username" aria-live="polite"></span>
+        </div>
+
+        <!-- Password Field with Show/Hide Toggle -->
+        <div class="form-group">
+          <label for="login-password" class="input-label">Password <span class="required">*</span></label>
+          <div class="password-input-wrapper">
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              class="form-input password-input"
+              placeholder="Enter password"
+              required
+              autocomplete="current-password"
+              aria-describedby="err-password"
+            >
+            <button
+              type="button"
+              id="btn-toggle-password"
+              class="btn-toggle-password"
+              aria-label="Show password"
+              title="Show password"
+            >
+              <!-- Eye Icon (Hidden Password) -->
+              <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <!-- Eye Off Icon (Visible Password) -->
+              <svg id="eye-off-icon" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </button>
+          </div>
+          <span class="field-error" id="err-password" aria-live="polite"></span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block btn-login">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Security / Demo Notice -->
+      <footer class="login-footer">
+        <p class="login-security-note">
+          <span class="security-lock" aria-hidden="true">🔒</span>
+          Frontend demonstration session. Production systems require server-side authentication.
+        </p>
+      </footer>
+    </div>
+  </main>
+
+  <!-- Login Logic Script -->
+  <script src="login.js"></script>
+</body>
+</html>
